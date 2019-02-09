@@ -52,8 +52,11 @@ module.exports = function (cy, $, options) {
     var node = $('<node />', xml).attr({id: ele.id()}).appendTo(xml);
 
     var eleData = getEleData(ele);
-    for (var key in eleData)
-      $('<data />', node).attr({type: eleData[key].attrType, key: key}).text(eleData[key].value).appendTo(node);
+    for (var key in eleData) {
+      var value = eleData[key].value;
+      var text = typeof value === "object" ? JSON.stringify(value) : value;
+      $('<data />', node).attr({type: eleData[key].attrType, key: key}).text(text).appendTo(node);
+    }
 
 
     if (ele.isParent()) {
@@ -93,8 +96,11 @@ module.exports = function (cy, $, options) {
     var edge = $('<edge />', $graph).attr({id: ele.id(), source: ele.source().id(), target: ele.target().id()}).appendTo($graph);
 
     var eleData = getEleData(ele);
-    for (var key in eleData)
-      $('<data />', edge).attr({key: key}).text(eleData[key].value).appendTo(edge);
+    for (var key in eleData) {
+      var value = eleData[key].value; //console.log(value, typeof value);
+      var text = typeof value === "object" ? JSON.stringify(value) : value;
+      $('<data />', edge).attr({key: key}).text(text).appendTo(edge);
+    }
 
   });
 
@@ -104,6 +110,16 @@ module.exports = function (cy, $, options) {
 },{}],2:[function(_dereq_,module,exports){
 module.exports = function (cy, $, options, cyGraphML) {
   function renderNode($graph) {
+
+    function isJson(str) {
+      try {
+        JSON.parse(str);
+      } catch (e) {
+        return false;
+      }
+      return true;
+    }
+
     $graph.find("node").each(function () {
       var $node = $(this);
 
@@ -115,9 +131,10 @@ module.exports = function (cy, $, options, cyGraphML) {
 
       $node.find('data').each(function () {
         var $data = $(this);
-
-        settings[$data.attr("type")][$data.attr("key")] = $data.text();
-
+        var type = $data.attr("type");
+        var key = $data.attr("key");
+        var text = $data.text(); console.log(type, key, text);
+        settings[type][key] = type === 'data' && isJson(text) ? JSON.parse(text) : text;
       });
 
       cy.add({
@@ -157,9 +174,9 @@ module.exports = function (cy, $, options, cyGraphML) {
 
         $edge.find('data').each(function () {
           var $data = $(this);
-
-          settings[$data.attr("type")][$data.attr("key")] = $data.text();
-
+          var key = $data.attr("key");
+          var text = $data.text();
+          settings["data"][key] = key === "properties" ? JSON.parse(text) : text;
         });
 
         cy.add({
