@@ -133,7 +133,7 @@ module.exports = function (cy, $, options, cyGraphML) {
         var $data = $(this);
         var type = $data.attr("type");
         var key = $data.attr("key");
-        var text = $data.text(); console.log(type, key, text);
+        var text = $data.text(); //console.log(type, key, text);
         settings[type][key] = type === 'data' && isJson(text) ? JSON.parse(text) : text;
       });
 
